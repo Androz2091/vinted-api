@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const UserAgent = require('user-agents');
 const querystring = require('querystring');
 const cookie = require('cookie');
 
@@ -37,7 +38,9 @@ const search = (query, options = {}) => {
             fetch('https://www.vinted.fr/api/v2/items?' + params, {
                 signal: controller.signal,
                 headers: {
-                    cookie: '_vinted_fr_session=' + cookie
+                    cookie: '_vinted_fr_session=' + cookie,
+                    'user-agent': new UserAgent().toString(),
+                    accept: 'application/json, text/plain, */*'
                 }
             }).then((res) => {
                 res.text().then((text) => {
