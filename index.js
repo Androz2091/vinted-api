@@ -48,7 +48,7 @@ const search = (query, options = {}) => {
                     try {
                         resolve(JSON.parse(text));
                     } catch (e) {
-                        throw text;
+                        reject(text);
                     }
                 });
             }).catch(() => {
