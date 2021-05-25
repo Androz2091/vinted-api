@@ -55,7 +55,7 @@ const search = (query, options = {}) => {
                 controller.abort();
                 reject('Can not fetch search API');
             });
-        }).catch(() => reject('Can not fetch cookie'));
+        }).catch((e) => { console.error(e) });
     });
 }
 
