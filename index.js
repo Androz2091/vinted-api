@@ -1,6 +1,5 @@
 const fetch = require('node-fetch');
 const UserAgent = require('user-agents');
-const querystring = require('querystring');
 const cookie = require('cookie');
 
 /**
@@ -28,7 +27,7 @@ const fetchCookie = () => {
 const search = (query, options = {}) => {
     return new Promise((resolve, reject) => {
 
-        const params = querystring.encode({
+        const params = new URLSearchParams({
             search_text: query,
             ...options
         });
