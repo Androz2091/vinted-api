@@ -7,7 +7,7 @@ Simple library that uses the Vinted API to search new posts.
 ```js
 const vinted = require('vinted-api');
 
-vinted.search('chaussures').then((posts) => {
+vinted.search('https://www.vinted.fr/vetements?brand_id[]=53').then((posts) => {
     console.log(posts); // all the posts that match this query
 });
 ```
