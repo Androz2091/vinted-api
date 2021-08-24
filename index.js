@@ -24,23 +24,26 @@ const fetchCookie = () => {
 /**
  * Parse a vinted URL to get the querystring usable in the search endpoint
  */
-const getVintedQuerystring = (url) => {
+const getVintedQuerystring = (url, newestFirst) => {
     const params = url.match(/(?:([a-z_]+)(\[\])?=([a-z0-9]*)&?)/g);
     const finalParams = new URLSearchParams();
     for (let param of params) {
         const [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-z0-9]*)&?)/);
         finalParams.set(isArray ? `${paramName}s` : paramName, paramValue);
     }
+    if (!finalParams.has('order') && newestFirst) finalParams.set('order', 'newest_first');
     return finalParams;
 }
 
 /**
  * Searches something on Vinted
  */
-const search = (url) => {
+const search = (url, options = {
+    newestFirst: false
+}) => {
     return new Promise((resolve, reject) => {
 
-        const params = getVintedQuerystring(url);
+        const params = getVintedQuerystring(url, options.newestFirst ?? false);
 
         fetchCookie().then((cookie) => {
             const controller = new AbortController();
