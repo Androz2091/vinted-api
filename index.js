@@ -26,7 +26,6 @@ const fetchCookie = () => {
  */
 const getVintedQuerystring = (url) => {
     const params = url.match(/(?:([a-z_]+)(\[\])?=([a-z0-9]*)&?)/g);
-    console.log(url)
     const finalParams = new URLSearchParams();
     for (let param of params) {
         const [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-z0-9]*)&?)/);
