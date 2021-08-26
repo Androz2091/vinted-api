@@ -8,6 +8,9 @@
   },
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=15.0.0"
+  },
   "dependencies": {
     "cookie": "^0.4.1",
     "jest": "^27.0.6",
