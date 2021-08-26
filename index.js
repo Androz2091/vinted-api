@@ -26,13 +26,25 @@ const fetchCookie = () => {
  */
 const getVintedQuerystring = (url, newestFirst) => {
     const params = url.match(/(?:([a-z_]+)(\[\])?=([a-z0-9]*)&?)/g);
-    const finalParams = new URLSearchParams();
+    const mappedParams = new Map();
     for (let param of params) {
         const [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-z0-9]*)&?)/);
-        finalParams.set(isArray ? `${paramName}s` : paramName, paramValue);
+        if (isArray) {
+            if (mappedParams.has(`${paramName}s`)) {
+                mappedParams.set(`${paramName}s`, [ ...mappedParams.get(`${paramName}s`), paramValue ]);
+            } else {
+                mappedParams.set(`${paramName}s`, [paramValue]);
+            }
+        } else {
+            mappedParams.set(paramName, paramValue);
+        }
     }
-    if (!finalParams.has('order') && newestFirst) finalParams.set('order', 'newest_first');
-    return finalParams;
+    if (!mappedParams.has('order') && newestFirst) mappedParams.set('order', 'newest_first');
+    const finalParams = [];
+    for (let [ key, value ] of mappedParams.entries()) {
+        finalParams.push(typeof value === 'string' ? `${key}=${value}` : `${key}=${value.join(',')}`);
+    }
+    return finalParams.join('&');
 }
 
 /**
@@ -71,5 +83,8 @@ const search = (url, options = {
     });
 }
 
-module.exports.fetchCookie = fetchCookie;
-module.exports.search = search;
+module.exports = {
+    fetchCookie,
+    getVintedQuerystring,
+    search
+}
