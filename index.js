@@ -25,10 +25,10 @@ const fetchCookie = () => {
  * Parse a vinted URL to get the querystring usable in the search endpoint
  */
 const getVintedQuerystring = (url, newestFirst) => {
-    const params = url.match(/(?:([a-z_]+)(\[\])?=([a-z0-9]*)&?)/g);
+    const params = url.match(/(?:([a-z_]+)(\[\])?=([a-z0-9_]*)&?)/g);
     const mappedParams = new Map();
     for (let param of params) {
-        const [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-z0-9]*)&?)/);
+        const [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-z0-9_]*)&?)/);
         if (isArray) {
             if (mappedParams.has(`${paramName}s`)) {
                 mappedParams.set(`${paramName}s`, [ ...mappedParams.get(`${paramName}s`), paramValue ]);
