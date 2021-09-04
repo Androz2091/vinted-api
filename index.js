@@ -28,8 +28,9 @@ const getVintedQuerystring = (url, newestFirst) => {
     const params = url.match(/(?:([a-z_]+)(\[\])?=([a-z0-9_]*)&?)/g);
     const mappedParams = new Map();
     for (let param of params) {
-        const [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-z0-9_]*)&?)/);
+        let [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-z0-9_]*)&?)/);
         if (isArray) {
+            if (paramName === 'catalog') paramName = 'catalog_id';
             if (mappedParams.has(`${paramName}s`)) {
                 mappedParams.set(`${paramName}s`, [ ...mappedParams.get(`${paramName}s`), paramValue ]);
             } else {
