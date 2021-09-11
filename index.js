@@ -24,7 +24,7 @@ const fetchCookie = () => {
 /**
  * Parse a vinted URL to get the querystring usable in the search endpoint
  */
-const getVintedQuerystring = (url, disableOrder, allowSwap) => {
+const getVintedQuerystring = (url, disableOrder, allowSwap, customParams = {}) => {
     const missingIDsParams = ['catalog', 'status'];
     const params = url.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._]*)&?)/g);
     const mappedParams = new Map();
@@ -44,6 +44,9 @@ const getVintedQuerystring = (url, disableOrder, allowSwap) => {
     }
     if (!mappedParams.has('order') && !disableOrder) mappedParams.set('order', 'newest_first');
     if (!mappedParams.has('is_for_swap') && !allowSwap) mappedParams.set('is_for_swap', '0');
+    for (let key of Object.keys(customParams)) {
+        mappedParams.set(key, customParams[key]);
+    }
     const finalParams = [];
     for (let [ key, value ] of mappedParams.entries()) {
         finalParams.push(typeof value === 'string' ? `${key}=${value}` : `${key}=${value.join(',')}`);
@@ -54,13 +57,10 @@ const getVintedQuerystring = (url, disableOrder, allowSwap) => {
 /**
  * Searches something on Vinted
  */
-const search = (url, options = {
-    disableOrder: false,
-    allowSwap: false
-}) => {
+const search = (url, disableOrder = false, allowSwap = false, customParams = {}) => {
     return new Promise((resolve, reject) => {
 
-        const params = getVintedQuerystring(url, options.disableOrder ?? false, options.allowSwap ?? false);
+        const params = getVintedQuerystring(url, disableOrder ?? false, allowSwap ?? false, customParams);
 
         fetchCookie().then((cookie) => {
             const controller = new AbortController();
