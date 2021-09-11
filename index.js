@@ -30,7 +30,7 @@ const getVintedQuerystring = (url, disableOrder, allowSwap) => {
     const mappedParams = new Map();
     for (let param of params) {
         let [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._]*)&?)/g);
-        if (paramValue.includes(' ')) paramValue = paramValue.replace(/ /g, '+');
+        if (paramValue?.includes(' ')) paramValue = paramValue.replace(/ /g, '+');
         if (isArray) {
             if (missingIDsParams.includes(paramName)) paramName = `${paramName}_id`;
             if (mappedParams.has(`${paramName}s`)) {
