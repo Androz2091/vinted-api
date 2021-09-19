@@ -25,11 +25,12 @@ const fetchCookie = () => {
  * Parse a vinted URL to get the querystring usable in the search endpoint
  */
 const getVintedQuerystring = (url, disableOrder, allowSwap, customParams = {}) => {
+    url = url.replaceAll('%20', '+');
     const missingIDsParams = ['catalog', 'status'];
-    const params = url.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú]*)&?)/g);
+    const params = url.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú+]*)&?)/g);
     const mappedParams = new Map();
     for (let param of params) {
-        let [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú]*)&?)/);
+        let [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú+]*)&?)/);
         if (paramValue?.includes(' ')) paramValue = paramValue.replace(/ /g, '+');
         if (isArray) {
             if (missingIDsParams.includes(paramName)) paramName = `${paramName}_id`;
