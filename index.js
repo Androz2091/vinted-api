@@ -26,10 +26,10 @@ const fetchCookie = () => {
  */
 const getVintedQuerystring = (url, disableOrder, allowSwap, customParams = {}) => {
     const missingIDsParams = ['catalog', 'status'];
-    const params = url.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._]*)&?)/g);
+    const params = url.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú]*)&?)/g);
     const mappedParams = new Map();
     for (let param of params) {
-        let [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._]*)&?)/);
+        let [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú]*)&?)/);
         if (paramValue?.includes(' ')) paramValue = paramValue.replace(/ /g, '+');
         if (isArray) {
             if (missingIDsParams.includes(paramName)) paramName = `${paramName}_id`;
