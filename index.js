@@ -63,6 +63,8 @@ const parseVintedURL = (url, disableOrder, allowSwap, customParams = {}) => {
     }
 }
 
+const cookies = new Map();
+
 /**
  * Searches something on Vinted
  */
@@ -71,29 +73,40 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
 
         const { domain, querystring } = parseVintedURL(url, disableOrder ?? false, allowSwap ?? false, customParams);
 
-        fetchCookie().then((cookie) => {
-            const controller = new AbortController();
-            fetch(`https://www.vinted.${domain}/api/v2/items?${querystring}`, {
-                signal: controller.signal,
-                headers: {
-                    cookie: '_vinted_fr_session=' + cookie,
-                    'user-agent': new UserAgent().toString(),
-                    accept: 'application/json, text/plain, */*'
-                }
-            }).then((res) => {
-                res.text().then((text) => {
-                    controller.abort();
-                    try {
-                        resolve(JSON.parse(text));
-                    } catch (e) {
-                        reject(text);
-                    }
-                });
-            }).catch(() => {
-                controller.abort();
-                reject('Can not fetch search API');
+        const cachedCookie = cookies.get(domain);
+        const cookie = cachedCookie && cachedCookie.createdAt > Date.now() - 60_000 ? cachedCookie.cookie : await fetchCookie(domain).catch(() => {});
+        if (!cookie) {
+            return reject('Could not fetch cookie');
+        }
+        if (cachedCookie.cookie !== cookie) {
+            cookies.set(domain, {
+                cookie,
+                createdAt: Date.now()
             });
-        }).catch(() => reject('Can not fetch cookie'));
+        }
+
+        const controller = new AbortController();
+        fetch(`https://www.vinted.${domain}/api/v2/items?${querystring}`, {
+            signal: controller.signal,
+            headers: {
+                cookie: '_vinted_fr_session=' + cookie,
+                'user-agent': new UserAgent().toString(),
+                accept: 'application/json, text/plain, */*'
+            }
+        }).then((res) => {
+            res.text().then((text) => {
+                controller.abort();
+                try {
+                    resolve(JSON.parse(text));
+                } catch (e) {
+                    reject(text);
+                }
+            });
+        }).catch(() => {
+            controller.abort();
+            reject('Can not fetch search API');
+        });
+    
     });
 }
 
