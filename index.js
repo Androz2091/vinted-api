@@ -78,7 +78,7 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
         if (!cookie) {
             return reject('Could not fetch cookie');
         }
-        if (cachedCookie.cookie !== cookie) {
+        if (!cachedCookie || cachedCookie.cookie !== cookie) {
             cookies.set(domain, {
                 cookie,
                 createdAt: Date.now()
