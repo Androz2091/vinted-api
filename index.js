@@ -69,7 +69,7 @@ const cookies = new Map();
  * Searches something on Vinted
  */
 const search = (url, disableOrder = false, allowSwap = false, customParams = {}) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
 
         const { domain, querystring } = parseVintedURL(url, disableOrder ?? false, allowSwap ?? false, customParams);
 
