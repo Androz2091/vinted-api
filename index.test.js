@@ -8,9 +8,43 @@ test('search url', () => {
     return expect(vinted.search('https://www.vinted.fr/vetements?search_text=pantalon')).resolves.not.toBeNull();
 });
 
-test('parse url', () => {
-    return expect(vinted.getVintedQuerystring('https://www.vinted.fr/vetements?search_text=pulls%20%26%20sweats&currency=EUR&catalog[]=79&catalog[]=1816&size_id[]=207&size_id[]=208&brand_id[]=53&price_to=20&status[]=3&status[]=2&status[]=1&status[]=6&order=newest_first', false, false, {
-        per_page: '10'
-    }))
-        .toBe('search_text=pulls%20%26%20sweats&currency=EUR&catalog_ids=79,1816&size_ids=207,208&brand_ids=53&price_to=20&status_ids=3,2,1,6&order=newest_first&is_for_swap=0&per_page=10')
+test('works for basic URLs', () => {
+    return expect(vinted.parseVintedURL('https://www.vinted.fr/vetements?search_text=pokemon')).toEqual({
+        validURL: true,
+        querystring: 'search_text=pokemon',
+        domain: 'fr'
+    });
+});
+
+test('works for invalid URLs', () => {
+    expect(vinted.parseVintedURL('https://google.com/https://www.vinted.fr/vetements?search_text=pokemon')).toEqual({
+        validURL: false
+    });
+    return expect(vinted.parseVintedURL('htts://www.vinted.fr/vetements?search_text=chsiuhs&search_id=3579137773')).toEqual({
+        validURL: false
+    });
+});
+
+test('works for it URLs', () => {
+    return expect(vinted.parseVintedURL('https://www.vinted.it/vetements?search_text=pokemon')).toEqual({
+        validURL: true,
+        querystring: 'search_text=pokemon',
+        domain: 'it'
+    });
+});
+
+test('works for hard-coded URLs', () => {
+    return expect(vinted.parseVintedURL('https://www.vinted.fr/vetements?search_text=&brand_id%5B%5D=53&brand_id%5B%5D=304&brand_id%5B%5D=14&brand_id%5B%5D=88&size_id%5B%5D=208&size_id%5B%5D=784&status%5B%5D=2&currency=EUR&order=newest_first')).toEqual({
+        validURL: true,
+        querystring: 'search_text=&brand_ids=53,304,14,88&size_ids=208,784&status_ids=2&currency=EUR&order=newest_first',
+        domain: 'fr'
+    });
+});
+
+test('works for weird URLs with &', () => {
+    return expect(vinted.parseVintedURL('https://www.vinted.fr/vetements?search_text=coucou%20%26%20sell&size_id[]=208&currency=EUR&order=newest_first')).toEqual({
+        validURL: true,
+        querystring: 'search_text=coucou+%26+sell&size_ids=208&currency=EUR&order=newest_first',
+        domain: 'fr'
+    });
 });

@@ -5,10 +5,10 @@ const cookie = require('cookie');
 /**
  * Fetches a new public cookie from Vinted.fr
  */
-const fetchCookie = () => {
+const fetchCookie = (domain = 'fr') => {
     return new Promise((resolve, reject) => {
         const controller = new AbortController();
-        fetch('https://vinted.fr', {
+        fetch(`https://vinted.${domain}`, {
             signal: controller.signal
         }).then((res) => {
             const sessionCookie = res.headers.get('set-cookie');
@@ -24,9 +24,15 @@ const fetchCookie = () => {
 /**
  * Parse a vinted URL to get the querystring usable in the search endpoint
  */
-const getVintedQuerystring = (url, disableOrder, allowSwap, customParams = {}) => {
+const parseVintedURL = (url, disableOrder, allowSwap, customParams = {}) => {
+    const decodedURL = decodeURI(url);
+    const matchedParams = decodedURL.match(/^https:\/\/www\.vinted\.([a-z]+)/);
+    if (!matchedParams) return {
+        validURL: false
+    };
+
     const missingIDsParams = ['catalog', 'status'];
-    const params = url.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú+%]*)&?)/g);
+    const params = decodedURL.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú+%]*)&?)/g);
     const mappedParams = new Map();
     for (let param of params) {
         let [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú+%]*)&?)/);
@@ -42,8 +48,6 @@ const getVintedQuerystring = (url, disableOrder, allowSwap, customParams = {}) =
             mappedParams.set(paramName, paramValue);
         }
     }
-    if (!mappedParams.has('order') && !disableOrder) mappedParams.set('order', 'newest_first');
-    if (!mappedParams.has('is_for_swap') && !allowSwap) mappedParams.set('is_for_swap', '0');
     for (let key of Object.keys(customParams)) {
         mappedParams.set(key, customParams[key]);
     }
@@ -51,7 +55,12 @@ const getVintedQuerystring = (url, disableOrder, allowSwap, customParams = {}) =
     for (let [ key, value ] of mappedParams.entries()) {
         finalParams.push(typeof value === 'string' ? `${key}=${value}` : `${key}=${value.join(',')}`);
     }
-    return finalParams.join('&');
+
+    return {
+        validURL: true,
+        domain: matchedParams[1],
+        querystring: finalParams.join('&')
+    }
 }
 
 /**
@@ -60,11 +69,11 @@ const getVintedQuerystring = (url, disableOrder, allowSwap, customParams = {}) =
 const search = (url, disableOrder = false, allowSwap = false, customParams = {}) => {
     return new Promise((resolve, reject) => {
 
-        const params = getVintedQuerystring(url, disableOrder ?? false, allowSwap ?? false, customParams);
+        const { domain, querystring } = parseVintedURL(url, disableOrder ?? false, allowSwap ?? false, customParams);
 
         fetchCookie().then((cookie) => {
             const controller = new AbortController();
-            fetch('https://www.vinted.fr/api/v2/items?' + params, {
+            fetch(`https://www.vinted.${domain}/api/v2/items?${querystring}`, {
                 signal: controller.signal,
                 headers: {
                     cookie: '_vinted_fr_session=' + cookie,
@@ -90,6 +99,6 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
 
 module.exports = {
     fetchCookie,
-    getVintedQuerystring,
+    parseVintedURL,
     search
 }
