@@ -1,6 +1,6 @@
 {
   "name": "vinted-api",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "JavaScript library to interact with the Vinted API",
   "main": "index.js",
   "typings": "./index.d.ts",
