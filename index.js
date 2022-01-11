@@ -27,7 +27,7 @@ const fetchCookie = (domain = 'fr') => {
 const parseVintedURL = (url, disableOrder, allowSwap, customParams = {}) => {
     const decodedURL = decodeURI(url);
     const matchedParams = decodedURL.match(/^https:\/\/www\.vinted\.([a-z]+)/);
-    if (!matchedParams) return {
+    if (!matchedParams || !(typeof matchedParams[Symbol.iterator] === 'function')) return {
         validURL: false
     };
 
