@@ -78,7 +78,7 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
         
         if (!validURL) {
             console.log(`[!] ${url} is not valid in search!`);
-            resolve([]);
+            return resolve([]);
         }
 
         const cachedCookie = cookies.get(domain);
