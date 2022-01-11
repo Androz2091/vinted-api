@@ -27,12 +27,15 @@ const fetchCookie = (domain = 'fr') => {
 const parseVintedURL = (url, disableOrder, allowSwap, customParams = {}) => {
     const decodedURL = decodeURI(url);
     const matchedParams = decodedURL.match(/^https:\/\/www\.vinted\.([a-z]+)/);
-    if (!matchedParams || !(typeof matchedParams[Symbol.iterator] === 'function')) return {
+    if (!matchedParams) return {
         validURL: false
     };
 
     const missingIDsParams = ['catalog', 'status'];
     const params = decodedURL.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú+%]*)&?)/g);
+    if (typeof matchedParams[Symbol.iterator] !== 'function') return {
+        validURL: false
+    };
     const mappedParams = new Map();
     for (let param of params) {
         let [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú+%]*)&?)/);
@@ -71,7 +74,12 @@ const cookies = new Map();
 const search = (url, disableOrder = false, allowSwap = false, customParams = {}) => {
     return new Promise(async (resolve, reject) => {
 
-        const { domain, querystring } = parseVintedURL(url, disableOrder ?? false, allowSwap ?? false, customParams);
+        const { validURL, domain, querystring } = parseVintedURL(url, disableOrder ?? false, allowSwap ?? false, customParams);
+        
+        if (!validURL) {
+            console.log(`[!] ${url} is not valid in search!`);
+            resolve([]);
+        }
 
         const cachedCookie = cookies.get(domain);
         const cookie = cachedCookie && cachedCookie.createdAt > Date.now() - 60_000 ? cachedCookie.cookie : await fetchCookie(domain).catch(() => {});
