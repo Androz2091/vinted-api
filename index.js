@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const UserAgent = require('user-agents');
 const cookie = require('cookie');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 
 /**
  * Fetches a new public cookie from Vinted.fr
@@ -9,7 +10,8 @@ const fetchCookie = (domain = 'fr') => {
     return new Promise((resolve, reject) => {
         const controller = new AbortController();
         fetch(`https://vinted.${domain}`, {
-            signal: controller.signal
+            signal: controller.signal,
+            agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined
         }).then((res) => {
             const sessionCookie = res.headers.get('set-cookie');
             controller.abort();
@@ -102,6 +104,7 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
         const controller = new AbortController();
         fetch(`https://www.vinted.${domain}/api/v2/items?${querystring}`, {
             signal: controller.signal,
+            agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
             headers: {
                 cookie: '_vinted_fr_session=' + cookie,
                 'user-agent': new UserAgent().toString(),
