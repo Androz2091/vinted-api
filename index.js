@@ -95,6 +95,7 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
         }
 
         const c = cookies.get(domain);
+        if (c) console.log(`[*] Using cached cookie for ${domain}`);
         const cookie = c || await fetchCookie(domain).catch(() => {});
         if (!cookie) {
             return reject('Could not fetch cookie');
