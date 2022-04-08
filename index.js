@@ -11,9 +11,13 @@ const cookies = new Map();
 const fetchCookie = (domain = 'fr') => {
     return new Promise((resolve, reject) => {
         const controller = new AbortController();
+        const agent = process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined;
+        if (agent) {
+            console.log(`[*] Using proxy ${process.env.VINTED_API_HTTPS_PROXY}`);
+        }
         fetch(`https://vinted.${domain}`, {
             signal: controller.signal,
-            agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined
+            agent
         }).then((res) => {
             const sessionCookie = res.headers.get('set-cookie');
             controller.abort();
