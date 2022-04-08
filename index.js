@@ -3,7 +3,7 @@ const UserAgent = require('user-agents');
 const cookie = require('cookie');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 
-let cachedCookie = null;
+const cookies = new Map();
 
 /**
  * Fetches a new public cookie from Vinted.fr
@@ -20,7 +20,7 @@ const fetchCookie = (domain = 'fr') => {
             const c = cookie.parse(sessionCookie)['secure, _vinted_fr_session'];
             if (c) {
                 console.log(c);
-                cachedCookie = c;
+                cookies.set(domain, c);
             }
             resolve();
         }).catch(() => {
@@ -94,10 +94,11 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
             return resolve([]);
         }
 
-        if (cachedCookie) console.log(`[*] Using cached cookie for ${domain}`);
-        if (!cachedCookie) {
+        const c = cookies.get(domain);
+        if (c) console.log(`[*] Using cached cookie for ${domain}`);
+        if (!c) {
             console.log(`[*] Fetching cookie for ${domain}`);
-            await fetchCookie().catch(() => {});
+            await fetchCookie(domain).catch(() => {});
         }
 
         const controller = new AbortController();
