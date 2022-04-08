@@ -94,12 +94,11 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
         if (!cookie) {
             return reject('Could not fetch cookie');
         }
-        if (!cachedCookie || cachedCookie.cookie !== cookie) {
-            cookies.set(domain, {
-                cookie,
-                createdAt: Date.now()
-            });
-        }
+
+        cookies.set(domain, {
+            cookie,
+            createdAt: Date.now()
+        });
 
         const controller = new AbortController();
         fetch(`https://www.vinted.${domain}/api/v2/catalog/items?${querystring}`, {
