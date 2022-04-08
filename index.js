@@ -98,7 +98,7 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
             return resolve([]);
         }
 
-        const c = cookies.get(domain);
+        const c = cookies.get(domain) ?? process.env[`VINTED_API_${domain.toUpperCase()}_COOKIE`];
         if (c) console.log(`[*] Using cached cookie for ${domain}`);
         if (!c) {
             console.log(`[*] Fetching cookie for ${domain}`);
