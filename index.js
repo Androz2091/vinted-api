@@ -104,7 +104,7 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
         const controller = new AbortController();
         fetch(`https://www.vinted.${domain}/api/v2/catalog/items?${querystring}`, {
             signal: controller.signal,
-            agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
+            //agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
             headers: {
                 cookie: '_vinted_fr_session=' + cookie,
                 'user-agent': new UserAgent().toString(),
