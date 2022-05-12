@@ -17,7 +17,7 @@ const fetchCookie = (domain = 'fr') => {
         }
         fetch(`https://vinted.${domain}`, {
             signal: controller.signal,
-            agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
+            agent,
             headers: {
                 'user-agent': new UserAgent().toString()
             }
