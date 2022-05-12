@@ -3,12 +3,18 @@ const UserAgent = require('user-agents');
 const cookie = require('cookie');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 
+const cookies = new Map();
+
 /**
  * Fetches a new public cookie from Vinted.fr
  */
 const fetchCookie = (domain = 'fr') => {
     return new Promise((resolve, reject) => {
         const controller = new AbortController();
+        const agent = process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined;
+        if (agent) {
+            console.log(`[*] Using proxy ${process.env.VINTED_API_HTTPS_PROXY}`);
+        }
         fetch(`https://vinted.${domain}`, {
             signal: controller.signal,
             agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
@@ -18,7 +24,12 @@ const fetchCookie = (domain = 'fr') => {
         }).then((res) => {
             const sessionCookie = res.headers.get('set-cookie');
             controller.abort();
-            resolve(cookie.parse(sessionCookie)['secure, _vinted_fr_session']);
+            const c = cookie.parse(sessionCookie)['secure, _vinted_fr_session'];
+            if (c) {
+                console.log(c);
+                cookies.set(domain, c);
+            }
+            resolve();
         }).catch(() => {
             controller.abort();
             reject();
@@ -77,8 +88,6 @@ const parseVintedURL = (url, disableOrder, allowSwap, customParams = {}) => {
     }
 }
 
-const cookies = new Map();
-
 /**
  * Searches something on Vinted
  */
@@ -92,22 +101,17 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
             return resolve([]);
         }
 
-        const cachedCookie = cookies.get(domain);
-        const cookie = cachedCookie && cachedCookie.createdAt > Date.now() - 60_000 ? cachedCookie.cookie : await fetchCookie(domain).catch(() => {});
-        if (!cookie) {
-            return reject('Could not fetch cookie');
-        }
-        if (!cachedCookie || cachedCookie.cookie !== cookie) {
-            cookies.set(domain, {
-                cookie,
-                createdAt: Date.now()
-            });
+        const c = cookies.get(domain) ?? process.env[`VINTED_API_${domain.toUpperCase()}_COOKIE`];
+        if (c) console.log(`[*] Using cached cookie for ${domain}`);
+        if (!c) {
+            console.log(`[*] Fetching cookie for ${domain}`);
+            await fetchCookie(domain).catch(() => {});
         }
 
         const controller = new AbortController();
         fetch(`https://www.vinted.be/api/v2/catalog/items?${querystring}`, {
             signal: controller.signal,
-            agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
+            //agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
             headers: {
                 cookie: '_vinted_fr_session=' + cookie,
                 'user-agent': new UserAgent().toString(),
@@ -122,7 +126,12 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
                     reject(text);
                 }
             });
-        }).catch(() => {
+        }).catch((e) => {
+            try {
+                if (JSON.parse(e).message === `Token d'authentification invalide`) {
+                    fetchCookie();
+                }
+            } catch {}
             controller.abort();
             reject('Can not fetch search API');
         });
