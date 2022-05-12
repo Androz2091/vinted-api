@@ -17,7 +17,10 @@ const fetchCookie = (domain = 'fr') => {
         }
         fetch(`https://vinted.${domain}`, {
             signal: controller.signal,
-            agent
+            agent,
+            headers: {
+                'user-agent': new UserAgent().toString()
+            }
         }).then((res) => {
             const sessionCookie = res.headers.get('set-cookie');
             controller.abort();
@@ -106,7 +109,7 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
         }
 
         const controller = new AbortController();
-        fetch(`https://www.vinted.${domain}/api/v2/catalog/items?${querystring}`, {
+        fetch(`https://www.vinted.be/api/v2/catalog/items?${querystring}`, {
             signal: controller.signal,
             //agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
             headers: {
