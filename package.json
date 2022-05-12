@@ -4,6 +4,10 @@
   "description": "JavaScript library to interact with the Vinted API",
   "main": "index.js",
   "typings": "./index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Androz2091/vinted-api.git"
+  },
   "scripts": {
     "test": "jest"
   },
