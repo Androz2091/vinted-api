@@ -113,7 +113,7 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
             signal: controller.signal,
             //agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
             headers: {
-                cookie: '_vinted_fr_session=' + cookie,
+                cookie: '_vinted_fr_session=' + c,
                 'user-agent': new UserAgent().toString(),
                 accept: 'application/json, text/plain, */*'
             }
