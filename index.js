@@ -13,7 +13,7 @@ const fetchCookie = (domain = 'fr') => {
         const controller = new AbortController();
         const agent = process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined;
         if (agent) {
-            console.log(`[*] Using proxy ${process.env.VINTED_API_HTTPS_PROXY}`);
+            // console.log(`[*] Using proxy ${process.env.VINTED_API_HTTPS_PROXY}`);
         }
         fetch(`https://vinted.${domain}`, {
             signal: controller.signal,
@@ -26,7 +26,7 @@ const fetchCookie = (domain = 'fr') => {
             controller.abort();
             const c = cookie.parse(sessionCookie)['secure, _vinted_fr_session'];
             if (c) {
-                console.log(c);
+                // console.log(c);
                 cookies.set(domain, c);
             }
             resolve();
@@ -102,9 +102,9 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
         }
 
         var c = cookies.get(domain) ?? process.env[`VINTED_API_${domain.toUpperCase()}_COOKIE`];
-        if (c) console.log(`[*] Using cached cookie for ${domain}`);
+        // if (c) console.log(`[*] Using cached cookie for ${domain}`);
         if (!c) {
-            console.log(`[*] Fetching cookie for ${domain}`);
+            // console.log(`[*] Fetching cookie for ${domain}`);
             await fetchCookie(domain).catch(() => {});
             c = cookies.get(domain) ?? process.env[`VINTED_API_${domain.toUpperCase()}_COOKIE`];
         }
