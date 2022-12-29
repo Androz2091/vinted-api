@@ -19,8 +19,10 @@
   "dependencies": {
     "cookie": "^0.4.1",
     "https-proxy-agent": "^5.0.0",
-    "jest": "^27.0.6",
     "node-fetch": "^2.6.1",
     "user-agents": "^1.0.642"
+  },
+  "devDependencies": {
+    "jest": "^27.0.6"
   }
 }
