@@ -12,7 +12,3 @@ vinted.search('https://www.vinted.fr/vetements?brand_id[]=53').then((posts) => {
 });
 ```
 
-## Credits
-
-This is a fork from [vinted-api](https://github.com/Androz2091/vinted-api) by [Androz2091](https://github.com/Androz2091)
-But this one is currently working and updated.

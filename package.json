@@ -1,22 +1,17 @@
 {
-  "name": "@imperiator_/vinted-api",
-  "version": "2.9.2",
+  "name": "vinted-api",
+  "version": "2.9.1",
   "description": "JavaScript library to interact with the Vinted API",
   "main": "index.js",
   "typings": "./index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Imperiator/vinted-api.git"
+    "url": "https://github.com/Androz2091/vinted-api.git"
   },
   "scripts": {
     "test": "jest"
   },
-  "keywords": [
-    "vinted",
-    "api",
-    "vinted-bot"
-  ],
-  "author": "Imperiator_ <clement@imperiator.tk>",
+  "author": "",
   "license": "ISC",
   "engines": {
     "node": ">=15.0.0"
@@ -28,10 +23,6 @@
     "user-agents": "^1.0.642"
   },
   "devDependencies": {
-    "jest": "^29.3.1"
-  },
-  "bugs": {
-    "url": "https://github.com/Imperiator/vinted-api/issues"
-  },
-  "homepage": "https://github.com/Imperiator/vinted-api#readme"
+    "jest": "^27.0.6"
+  }
 }
