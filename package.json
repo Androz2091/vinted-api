@@ -1,6 +1,6 @@
 {
   "name": "@imperiator_/vinted-api",
-  "version": "2.9.1",
+  "version": "2.9.2",
   "description": "JavaScript library to interact with the Vinted API",
   "main": "index.js",
   "typings": "./index.d.ts",
@@ -11,7 +11,11 @@
   "scripts": {
     "test": "jest"
   },
-  "keywords": ["vinted", "api", "vinted-bot"],
+  "keywords": [
+    "vinted",
+    "api",
+    "vinted-bot"
+  ],
   "author": "Imperiator_ <clement@imperiator.tk>",
   "license": "ISC",
   "engines": {
