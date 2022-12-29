@@ -11,6 +11,7 @@
   "scripts": {
     "test": "jest"
   },
+  "keywords": ["vinted", "api", "vinted-bot"],
   "author": "Imperiator_ <clement@imperiator.tk>",
   "license": "ISC",
   "engines": {
