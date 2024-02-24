@@ -23,13 +23,16 @@ const fetchCookie = (domain = 'fr') => {
             }
         }).then((res) => {
             const sessionCookie = res.headers.get('set-cookie');
+
+            const cc = sessionCookie.split(`_vinted_${domain}_session=`)[1].split(';')[0]
+
             controller.abort();
             const c = cookie.parse(sessionCookie)['secure, _vinted_fr_session'];
-            if (c) {
-                console.log(c);
-                cookies.set(domain, c);
+            if (cc) {
+                console.log(cc);
+                cookies.set(domain, cc);
             }
-            resolve();
+            resolve(cc);
         }).catch(() => {
             controller.abort();
             reject();
@@ -101,15 +104,17 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
             return resolve([]);
         }
 
-        const c = cookies.get(domain) ?? process.env[`VINTED_API_${domain.toUpperCase()}_COOKIE`];
+        let c = cookies.get(domain) ?? process.env[`VINTED_API_${domain.toUpperCase()}_COOKIE`];
         if (c) console.log(`[*] Using cached cookie for ${domain}`);
         if (!c) {
             console.log(`[*] Fetching cookie for ${domain}`);
-            await fetchCookie(domain).catch(() => {});
+            const fetchedCookie = await fetchCookie(domain).catch(() => {});
+            
+            if (fetchedCookie) c = fetchedCookie
         }
 
         const controller = new AbortController();
-        fetch(`https://www.vinted.be/api/v2/catalog/items?${querystring}`, {
+        fetch(`https://www.vinted.${domain.toLowerCase()}/api/v2/catalog/items?${querystring}`, {
             signal: controller.signal,
             //agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
             headers: {
@@ -128,7 +133,9 @@ const search = (url, disableOrder = false, allowSwap = false, customParams = {})
             });
         }).catch((e) => {
             try {
-                if (JSON.parse(e).message === `Token d'authentification invalide`) {
+                const err = `Token d'authentification invalide`;
+                if (JSON.parse(e).message === err || e.message === err) {
+                    console.log('fetching cookie')
                     fetchCookie();
                 }
             } catch {}
