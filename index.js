@@ -1,4 +1,3 @@
-const fetch = require('node-fetch');
 const UserAgent = require('user-agents');
 const cookie = require('cookie');
 const { HttpsProxyAgent } = require('https-proxy-agent');
@@ -6,141 +5,149 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 const cookies = new Map();
 
 /**
- * Fetches a new public cookie from Vinted.fr
+ * Fetches a new public cookie from Vinted
+ * @param {string} domain - The Vinted domain (e.g., 'fr', 'be')
+ * @returns {Promise<string>} - Resolves with the session cookie
  */
-const fetchCookie = (domain = 'fr') => {
-    return new Promise((resolve, reject) => {
-        const controller = new AbortController();
-        const agent = process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined;
+const fetchCookie = async (domain = 'fr') => {
+    try {
+        const agent = process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY): undefined;
         if (agent) {
             console.log(`[*] Using proxy ${process.env.VINTED_API_HTTPS_PROXY}`);
         }
-        fetch(`https://vinted.${domain}`, {
-            signal: controller.signal,
-            agent,
+
+        const response = await fetch(`https://www.vinted.${domain}`, {
             headers: {
-                'user-agent': new UserAgent().toString()
-            }
-        }).then((res) => {
-            const sessionCookie = res.headers.get('set-cookie');
-            controller.abort();
-            const c = cookie.parse(sessionCookie)['secure, _vinted_fr_session'];
-            if (c) {
-                console.log(c);
-                cookies.set(domain, c);
-            }
-            resolve();
-        }).catch(() => {
-            controller.abort();
-            reject();
+                'user-agent': new UserAgent().toString(),
+            },
+            agent,
         });
-    });
-}
+
+        const sessionCookie = response.headers.get('set-cookie');
+        if (!sessionCookie) {
+            throw new Error('No cookie received');
+        }
+
+        cookies.set(domain, sessionCookie);
+        return sessionCookie;
+    } catch (error) {
+        console.error(`[!] Failed to fetch cookie for ${domain}: ${error.message}`);
+        throw error;
+    }
+};
 
 /**
- * Parse a vinted URL to get the querystring usable in the search endpoint
+ * Parses a Vinted URL to extract query parameters
+ * @param {string} url - The Vinted search URL
+ * @param {boolean} disableOrder - Whether to disable default sorting
+ * @param {boolean} allowSwap - Whether to include swap items
+ * @param {Object} customParams - Additional query parameters
+ * @returns {Object} - Parsed URL details
  */
-const parseVintedURL = (url, disableOrder, allowSwap, customParams = {}) => {
+const parseVintedURL = (url, disableOrder = false, allowSwap = false, customParams = {}) => {
     try {
         const decodedURL = decodeURI(url);
         const matchedParams = decodedURL.match(/^https:\/\/www\.vinted\.([a-z]+)/);
-        if (!matchedParams) return {
-            validURL: false
-        };
+        if (!matchedParams) {
+            return { validURL: false };
+        }
 
-        const missingIDsParams = ['catalog', 'status'];
-        const params = decodedURL.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú+%]*)&?)/g);
-        if (typeof matchedParams[Symbol.iterator] !== 'function') return {
-            validURL: false
-        };
+        const domain = matchedParams[1];
+        const urlObj = new URL(decodedURL);
+        const searchParams = new URLSearchParams(urlObj.search);
+
         const mappedParams = new Map();
-        for (let param of params) {
-            let [ _, paramName, isArray, paramValue ] = param.match(/(?:([a-z_]+)(\[\])?=([a-zA-Z 0-9._À-ú+%]*)&?)/);
-            if (paramValue?.includes(' ')) paramValue = paramValue.replace(/ /g, '+');
-            if (isArray) {
-                if (missingIDsParams.includes(paramName)) paramName = `${paramName}_id`;
-                if (mappedParams.has(`${paramName}s`)) {
-                    mappedParams.set(`${paramName}s`, [ ...mappedParams.get(`${paramName}s`), paramValue ]);
-                } else {
-                    mappedParams.set(`${paramName}s`, [paramValue]);
-                }
+        for (const [key, value] of searchParams.entries()) {
+            if (value.includes(' ')) {
+                mappedParams.set(key, value.replace(/ /g, '+'));
+            } else if (key.endsWith('[]')) {
+                const paramName = key.slice(0, -2);
+                const arrayKey = `${paramName}s`;
+                mappedParams.set(arrayKey, mappedParams.get(arrayKey) ? [...mappedParams.get(arrayKey), value] : [value]);
             } else {
-                mappedParams.set(paramName, paramValue);
+                mappedParams.set(key, value);
             }
         }
-        for (let key of Object.keys(customParams)) {
-            mappedParams.set(key, customParams[key]);
+
+        for (const [key, value] of Object.entries(customParams)) {
+            mappedParams.set(key, value);
         }
+
+        if (!disableOrder && !mappedParams.has('order')) {
+            mappedParams.set('order', 'newest_first');
+        }
+
+        if (allowSwap) {
+            mappedParams.set('swap', '1');
+        }
+
         const finalParams = [];
-        for (let [ key, value ] of mappedParams.entries()) {
-            finalParams.push(typeof value === 'string' ? `${key}=${value}` : `${key}=${value.join(',')}`);
+        for (const [key, value] of mappedParams.entries()) {
+            finalParams.push(Array.isArray(value) ? `${key}=${value.join(',')}` : `${key}=${value}`);
         }
 
         return {
             validURL: true,
-            domain: matchedParams[1],
-            querystring: finalParams.join('&')
-        }
-    } catch (e) {
-        return {
-            validURL: false
-        }
+            domain,
+            querystring: finalParams.join('&'),
+        };
+    } catch (error) {
+        console.error(`[!] Error parsing URL: ${error.message}`);
+        return { validURL: false };
     }
-}
+};
 
 /**
- * Searches something on Vinted
+ * Searches Vinted for items based on a URL
+ * @param {string} url - The Vinted search URL
+ * @param {boolean} disableOrder - Whether to disable default sorting
+ * @param {boolean} allowSwap - Whether to include swap items
+ * @param {Object} customParams - Additional query parameters
+ * @returns {Promise<Object>} - Search results
  */
-const search = (url, disableOrder = false, allowSwap = false, customParams = {}) => {
-    return new Promise(async (resolve, reject) => {
-
-        const { validURL, domain, querystring } = parseVintedURL(url, disableOrder ?? false, allowSwap ?? false, customParams);
-        
+const search = async (url, disableOrder = false, allowSwap = false, customParams = {}) => {
+    try {
+        const { validURL, domain, querystring } = parseVintedURL(url, disableOrder, allowSwap, customParams);
         if (!validURL) {
-            console.log(`[!] ${url} is not valid in search!`);
-            return resolve([]);
+            console.log(`[!] Invalid URL: ${url}`);
+            return [];
         }
 
-        const c = cookies.get(domain) ?? process.env[`VINTED_API_${domain.toUpperCase()}_COOKIE`];
-        if (c) console.log(`[*] Using cached cookie for ${domain}`);
-        if (!c) {
-            console.log(`[*] Fetching cookie for ${domain}`);
-            await fetchCookie(domain).catch(() => {});
+        let sessionCookie = cookies.get(domain) || process.env[`VINTED_API_${domain.toUpperCase()}_COOKIE`];
+        if (!sessionCookie) {
+            console.log(`[*] No cached cookie for ${domain}, fetching new one`);
+            sessionCookie = await fetchCookie(domain);
         }
 
-        const controller = new AbortController();
-        fetch(`https://www.vinted.be/api/v2/catalog/items?${querystring}`, {
-            signal: controller.signal,
-            //agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
+        const response = await fetch(`https://www.vinted.${domain}/api/v2/catalog/items?${querystring}`, {
             headers: {
-                cookie: '_vinted_fr_session=' + c,
                 'user-agent': new UserAgent().toString(),
-                accept: 'application/json, text/plain, */*'
-            }
-        }).then((res) => {
-            res.text().then((text) => {
-                controller.abort();
-                try {
-                    resolve(JSON.parse(text));
-                } catch (e) {
-                    reject(text);
-                }
-            });
-        }).catch((e) => {
-            try {
-                if (JSON.parse(e).message === `Token d'authentification invalide`) {
-                    fetchCookie();
-                }
-            } catch {}
-            controller.abort();
-            reject('Can not fetch search API');
+                'accept': 'application/json, text/plain, */*',
+                'cookie': `_vinted_fr_session=${sessionCookie}`,
+            },
+            agent: process.env.VINTED_API_HTTPS_PROXY ? new HttpsProxyAgent(process.env.VINTED_API_HTTPS_PROXY) : undefined,
         });
-    
-    });
-}
+
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                console.log(`[!] Invalid cookie for ${domain}, refreshing`);
+                cookies.delete(domain);
+                sessionCookie = await fetchCookie(domain);
+                return search(url, disableOrder, allowSwap, customParams);
+            }
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.items || [];
+    } catch (error) {
+        console.error(`[!] Search failed: ${error.message}`);
+        return [];
+    }
+};
 
 module.exports = {
     fetchCookie,
     parseVintedURL,
-    search
-}
+    search,
+};
