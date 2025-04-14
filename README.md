@@ -7,7 +7,7 @@ This fork was created to address the issue raised in: https://github.com/Androz2
 ## Example
 
 ```js
-const vinted = require('vinted-api-23');
+const vinted = require('./index.js');
 
 vinted.search('https://www.vinted.fr/vetements?brand_id[]=53').then((posts) => {
     console.log(posts); // all the posts that match this query
